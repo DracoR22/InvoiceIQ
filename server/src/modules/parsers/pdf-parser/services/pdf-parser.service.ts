@@ -27,7 +27,21 @@ export class PdfParserService {
 
 //--------------------------------------------------------//POST PDF FROM URL//----------------------------------------------------------------//
     async loadPdfFromUrl(url: string) {
-        
+        const response = await this.httpService.axiosRef({
+            url,
+            method: 'GET',
+            responseType: 'arraybuffer'
+        })
+
+        if (!response.headers['content-type'].includes('application/pdf')) {
+            throw new UnprocessableEntityException('The URL does not point to a PDF file')
+        }
+
+        if (parseInt(response.headers['Content-Length'] as string, 10) > 1024 * 1024 * 5) {
+            throw new UnprocessableEntityException('The PDF file is larger than 5MB')
+        }
+
+        return Buffer.from(response.data, 'binary')
     }
 
 //---------------------------------------------------------//PRIVATE FUNCTIONS//----------------------------------------------------------------//

@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    container_name: invoiceiq-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: invoiceiq
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+  # app:
+  #   build:
+  #     context: .
+  #     target: production
+  #   container_name: invoiceiq-app
+  #   restart: always
+  #   environment:
+  #     NODE_ENV: production
+  #     LOG_LEVEL: 'debug, verbose'
+  #     DATABASE_URL: postgresql://postgres:root@organize-simple-db:5432/organize-simple?schema=public
+  #     POPPLER_BIN_PATH: /usr/bin
+  #     OPENAI_API_KEY: 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
+  #   ports:
+  #     - '3000:3000'
+  #   depends_on:
+  #     - db
+volumes:
+  db_data:
+    name: invoiceiq-data
+# networks:
+#   invoiceiq_network:
+#     name: invoiceiq_network
