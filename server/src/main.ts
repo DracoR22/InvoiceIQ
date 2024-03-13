@@ -21,6 +21,7 @@ async function bootstrap() {
   // OpenApi swagger documentation
   const config = new DocumentBuilder()
    .setTitle('InvoiceIQ API')
+   .setContact('Draco R', 'https://github.com/DracoR22', 'rdraco039@gmail.com')
    .setDescription('InvoiceIQ is an API that allows you to organize your data in a way that is easy to use and understand with the power of large language models')
    .setVersion('1.0')
    .addApiKey({ type: 'apiKey', name: 'X-API-KEY', in: 'header', description: 'The API key to use for authentication' }, 'apiKey')

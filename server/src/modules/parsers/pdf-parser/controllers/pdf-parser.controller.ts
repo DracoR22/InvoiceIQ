@@ -1,9 +1,10 @@
-import { Body, Controller, ParseFilePipeBuilder, Post, UnprocessableEntityException, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Body, Controller, HttpCode, ParseFilePipeBuilder, Post, UnprocessableEntityException, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { ApiBody, ApiConsumes, ApiSecurity, ApiTags } from "@nestjs/swagger";
+import { ApiBadRequestResponse, ApiBody, ApiConsumes, ApiOkResponse, ApiSecurity, ApiTags, ApiUnauthorizedResponse, ApiUnprocessableEntityResponse } from "@nestjs/swagger";
 import { PdfParserService } from "../services/pdf-parser.service";
 import { PdfParserUploadResultDto, PdfParserUrlResultDto } from "../dtos/pdf-parser-result.dto";
 import { PdfParserRequestDto } from "../dtos/pdf-parser-request.dto";
+import { PdfNotParsedError } from "../exceptions/exceptions";
 
 const uploadSchema = {
     type: 'object',
@@ -26,6 +27,9 @@ const pdfPipe = new ParseFilePipeBuilder()
     fileIsRequired: true,
   });
 
+@ApiUnauthorizedResponse({ description: "The API ket in request's header is missing or invalid" })
+@ApiBadRequestResponse({ description: 'The request body or the uploaded file is invalid or missing' })
+@ApiUnprocessableEntityResponse({ description: 'The PDF does not contain plain text or information in text format.' })
 @ApiSecurity('apiKey')
 @ApiTags('parsers')
 @Controller({ path: 'parsers/pdf', version: '1' })
@@ -34,37 +38,45 @@ export class PdfParserController {
         private readonly pdfParserService: PdfParserService
     ) {}
 //-------------------------------------------------------//UPLOAD PDF AND PARSE IT//----------------------------------------------------------//
+    @ApiOkResponse({ type: PdfParserUploadResultDto, description: 'The PDF file has been successfully parsed, Its content is returned as text' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({ schema: uploadSchema, description: 'PDF file to be parsed' })
     @UseInterceptors(FileInterceptor('file'))
     @Post('upload')
+    @HttpCode(200)
     async parsePdfFromUpload(@UploadedFile(pdfPipe) file: Express.Multer.File): Promise<PdfParserUploadResultDto> {
-        const text = await this.pdfParserService.parsePdf(file.buffer)
+        try {
+         const text = await this.pdfParserService.parsePdf(file.buffer)
 
-        if (typeof text !== 'string' || text.length === 0) {
-            throw new UnprocessableEntityException('The PDF file could not be parsed')
-        }
-
-        return {
+         return {
             originalFileName: file.originalname,
             content: text
+          }
+        } catch (error) {
+          throw new UnprocessableEntityException(error.message)
         }
     }
 
 //-------------------------------------------------------//POST PDF URL AND PARSE IT//----------------------------------------------------------//
+    @ApiOkResponse({ type: PdfParserUploadResultDto, description: 'The PDF file has been successfully parsed, Its content is returned as text' })
     @Post('url')
+    @HttpCode(200)
     async parsePdfFromUrl(@Body() dto: PdfParserRequestDto): Promise<PdfParserUrlResultDto> {
-        const file = await this.pdfParserService.loadPdfFromUrl(dto.url)
+        try {
+          const file = await this.pdfParserService.loadPdfFromUrl(dto.url)
         
-        const text = await this.pdfParserService.parsePdf(file)
-
-        if (typeof text !== 'string' || text.length === 0) {
-            throw new UnprocessableEntityException('The PDF file could not be parsed')
-        }
-
-        return {
+          const text = await this.pdfParserService.parsePdf(file)
+      
+          return {
             originalUrl: dto.url,
             content: text
+          }
+        } catch (error) {
+          if (error instanceof PdfNotParsedError) {
+            throw new UnprocessableEntityException(error.message)
+          }
+
+          throw new BadRequestException(error.message)
         }
     }
 }
