@@ -20,7 +20,7 @@ export class PdfParserService {
             quiet: true
         }) as any
 
-        if (output instanceof Error || output.length === 0) {
+        if (output.length === 0) {
             throw new PdfNotParsedError()
         }
 

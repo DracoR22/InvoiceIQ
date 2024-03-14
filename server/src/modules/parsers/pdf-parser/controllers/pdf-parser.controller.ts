@@ -27,7 +27,7 @@ const pdfPipe = new ParseFilePipeBuilder()
     fileIsRequired: true,
   });
 
-@ApiUnauthorizedResponse({ description: "The API ket in request's header is missing or invalid" })
+@ApiUnauthorizedResponse({ description: "The API key in request's header is missing or invalid" })
 @ApiBadRequestResponse({ description: 'The request body or the uploaded file is invalid or missing' })
 @ApiUnprocessableEntityResponse({ description: 'The PDF does not contain plain text or information in text format.' })
 @ApiSecurity('apiKey')

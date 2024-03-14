@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { ParsersModule } from './modules/parsers/parsers.module';
 import configuration from './config/configuration';
+import { OrganizedDataModule } from './modules/organized-data/organized-data.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import configuration from './config/configuration';
       }),
     }),
     AuthModule,
-    ParsersModule
+    ParsersModule,
+    OrganizedDataModule
   ],
   controllers: [],
   providers: [],

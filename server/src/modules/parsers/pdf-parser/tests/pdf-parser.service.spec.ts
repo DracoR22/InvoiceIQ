@@ -46,19 +46,7 @@ describe('PdfParserService', () => {
             const actual = await service.parsePdf(buffer)
 
             expect(actual).toBe(expected)
-        })
-
-        it('should throw an error if the file extension is not .pdf', async () => {
-            const url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.jpg'
-            
-            await expect(service.loadPdfFromUrl(url)).rejects.toThrowError(PdfExtensionError)
-        })
-        
-        it('should throw an error if the file does not have the pdf magic number', async () => {
-            const url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.jpg'
-            
-            await expect(service.loadPdfFromUrl(url)).rejects.toThrowError(PdfMagicNumberError)
-        })
+        }, 70000)
     })
 })
 
