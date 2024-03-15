@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, HttpCode, ParseFilePipeBuilder, Post, UnprocessableEntityException, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { ApiBadRequestResponse, ApiBody, ApiConsumes, ApiOkResponse, ApiSecurity, ApiTags, ApiUnauthorizedResponse, ApiUnprocessableEntityResponse } from "@nestjs/swagger";
+import { ApiBadRequestResponse, ApiBody, ApiConsumes, ApiOkResponse, ApiOperation, ApiSecurity, ApiTags, ApiUnauthorizedResponse, ApiUnprocessableEntityResponse } from "@nestjs/swagger";
 import { PdfParserService } from "../services/pdf-parser.service";
 import { PdfParserUploadResultDto, PdfParserUrlResultDto } from "../dtos/pdf-parser-result.dto";
 import { PdfParserRequestDto } from "../dtos/pdf-parser-request.dto";
@@ -38,6 +38,7 @@ export class PdfParserController {
         private readonly pdfParserService: PdfParserService
     ) {}
 //-------------------------------------------------------//UPLOAD PDF AND PARSE IT//----------------------------------------------------------//
+    @ApiOperation({ summary: 'Return text from uploaded PDF file', description: `This endpoint retrieves the content of an uploaded PDF file and returns it as a text.\n The file must be a PDF parsable text context, with a maximum size of 5MB.`})
     @ApiOkResponse({ type: PdfParserUploadResultDto, description: 'The PDF file has been successfully parsed, Its content is returned as text' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({ schema: uploadSchema, description: 'PDF file to be parsed' })
@@ -58,6 +59,7 @@ export class PdfParserController {
     }
 
 //-------------------------------------------------------//POST PDF URL AND PARSE IT//----------------------------------------------------------//
+    @ApiOperation({ summary: 'Return text from PDF file provided by URL', description: `This endpoint retrieves the content of an PDF file available through an URL and returns it as a text.\n The file must be a PDF parsable text context, with a maximum size of 5MB` })
     @ApiOkResponse({ type: PdfParserUploadResultDto, description: 'The PDF file has been successfully parsed, Its content is returned as text' })
     @Post('url')
     @HttpCode(200)
