@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Poppler from "node-poppler";
 import { AxiosResponse } from "axios";
-import { PdfExtensionError, PdfMagicNumberError, PdfNotParsedError, PdfSizeError } from "../exceptions/exceptions";
+import { PdfExtensionError, PdfNotParsedError, PdfSizeError } from "../exceptions/exceptions";
 
 @Injectable()
 export class PdfParserService {
@@ -41,7 +41,9 @@ export class PdfParserService {
             responseType: 'arraybuffer'
         })
 
-        this.checkResponse(response)
+        if (response.headers['content-length'] > 5 * 1024 * 1024) {
+            throw new PdfSizeError()
+        }
 
         return Buffer.from(response.data, 'binary')
     }
@@ -59,19 +61,6 @@ export class PdfParserService {
         .join('\n');
 
         return processedText;
-    }
-
-    private checkResponse(response: AxiosResponse) {
-        if (parseInt(response.headers['Content-Length'] as string, 10) > 1024 * 1024 * 5) {
-            throw new PdfSizeError()
-        }
-
-        const pdfMagicNumber = Buffer.from([0x25, 0x50, 0x44, 0x46])
-        const bufferStart = response.data.subarray(0, 4)
-
-        if (!bufferStart.equals(pdfMagicNumber)) {
-            throw new PdfMagicNumberError()
-        }
     }
 }
 

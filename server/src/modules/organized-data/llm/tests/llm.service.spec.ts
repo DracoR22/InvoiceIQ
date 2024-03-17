@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing"
 import { LLMService } from "../services/llm.service"
 import { PromptTemplate } from "langchain/prompts"
 import { ConfigModule, ConfigService } from "@nestjs/config"
-import { LLMNotAvailableError, PromptTemplateFormatError } from "../exceptions/exceptions"
+import { LLMApiKeyInvalidError, LLMApiKeyMissingError, LLMNotAvailableError, PromptTemplateFormatError } from "../exceptions/exceptions"
 
 describe('LlmService', () => {
     let service: LLMService
@@ -15,6 +15,7 @@ describe('LlmService', () => {
         }).compile()
 
         service = module.get<LLMService>(LLMService)
+        configService = module.get<ConfigService>(ConfigService)
     })
 
     it('should be defined', () => {
@@ -23,7 +24,10 @@ describe('LlmService', () => {
 
     describe('generateOutput()', () => {
         it('should generate an output', async () => {
-          const model = 'gpt-3.5-turbo'
+          const model = {
+            apiKey: configService.get('OPENAI_API_KEY'),
+            name: 'gpt-3.5-turbo'
+          }
 
           const promptTemplate = new PromptTemplate({
             template: 'What is a good name for a company that makes {product}?',
@@ -38,7 +42,10 @@ describe('LlmService', () => {
         });
 
         it('should throw error if the model given is not available', async () => {
-            const model = 'gpt-42'
+          const model = {
+            apiKey: configService.get('OPENAI_API_KEY'),
+            name: 'gpt-42'
+          }
 
             const promptTemplate = new PromptTemplate({
                 template: 'What is a good name for a company that makes {product}?',
@@ -48,8 +55,38 @@ describe('LlmService', () => {
             await expect(service.generateOutput(model, promptTemplate, { product: 'cars' })).rejects.toThrow(LLMNotAvailableError)
         })
 
+        it('should throw error if the given model needs a missing API key', async () => {
+          const model = {
+            name: 'gpt-3.5-turbo'
+          }
+
+            const promptTemplate = new PromptTemplate({
+                template: 'What is a good name for a company that makes {product}?',
+                inputVariables: ['product'],  
+            });
+
+            await expect(service.generateOutput(model, promptTemplate, { product: 'cars' })).rejects.toThrow(LLMApiKeyMissingError)
+        })
+
+        it('should throw error if the given model API key is invalid', async () => {
+          const model = {
+            apiKey: 'invalid',
+            name: 'gpt-3.5-turbo'
+          }
+
+            const promptTemplate = new PromptTemplate({
+                template: 'What is a good name for a company that makes {product}?',
+                inputVariables: ['product'],  
+            });
+
+            await expect(service.generateOutput(model, promptTemplate, { product: 'cars' })).rejects.toThrow(LLMApiKeyInvalidError)
+        })
+
         it('should throw error if the chain values do not match the input variables of the prompt template', async () => {
-            const model = 'gpt-3.5-turbo'
+          const model = {
+            apiKey: configService.get('OPENAI_API_KEY'),
+            name: 'gpt-3.5-turbo'
+          }
   
             const promptTemplate = new PromptTemplate({
               template: 'What is a good name for a company that makes {product}?',
@@ -66,7 +103,11 @@ describe('LlmService', () => {
 
     describe('generateRefineOutput()', () => {
         it ('should generate the correct output from a chunked document', async () => {
-            const model = 'gpt-3.5-turbo'
+           const model = {
+              apiKey: configService.get('OPENAI_API_KEY'),
+              name: 'gpt-3.5-turbo'
+            }
+
             const text = `This is the first sentence of the testing text.\n This is the second sentence of the testing text. It contains the tagged value to output: llm-organizer`
 
               const documents = await service.splitDocument(text, { chunkSize: 100, overlap: 0 });
@@ -98,19 +139,6 @@ describe('LlmService', () => {
 
               expect(output).toBeDefined()
               expect(output['output_text']).toContain('llm-organizer')
-        }, 70000)
-        
-        it('should throw error if the model given is not available', async () => {
-            const model = 'gpt-42'
-
-            const promptTemplate = new PromptTemplate({
-                template: 'What is a good name for a company that makes {product}?',
-                inputVariables: ['product'],  
-            });
-
-            await expect(service.generateRefineOutput(model, promptTemplate, promptTemplate, { input_documents: [] })).rejects.toThrow(LLMNotAvailableError)
-        })
-
-        
+        }, 70000)    
     })
 })

@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing"
 import { PdfParserService } from "../services/pdf-parser.service"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { HttpModule } from "@nestjs/axios"
-import { PdfExtensionError, PdfMagicNumberError } from "../exceptions/exceptions"
+import { PdfExtensionError } from "../exceptions/exceptions"
 
 describe('PdfParserService', () => {
     let service: PdfParserService

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { IsBoolean, IsJSON, IsNotEmpty, IsObject, IsOptional, Validate, ValidatorConstraint, ValidatorConstraintInterface, isNotEmpty } from 'class-validator';
 import { RefineParams } from '../types/types';
+import { DebugReport } from '../../llm/dtos/debug.dto';
   
   export enum Model {
     GPT_3_5_TURBO = 'gpt-3.5-turbo',
@@ -34,31 +35,27 @@ import { RefineParams } from '../types/types';
     @IsNotEmpty()
     text: string;
   
-    // @ApiProperty({
-    //   description: 'model to use for data extraction',
-    //   type: 'object',
-    //   properties: {
-    //     apiKey: {
-    //       type: 'string',
-    //       description: 'api key of the model',
-    //       nullable: true,
-    //     },
-    //     name: {
-    //       type: 'string',
-    //       description: 'name of the model',
-    //       default: 'gpt-3.5-turbo',
-    //     },
-    //   },
-    // })
-    // @IsObject()
-    // model: {
-    //   apiKey?: string;
-    //   name: string;
-    // };
-
-    @ApiProperty() 
-    @IsNotEmpty()
-    model: string
+    @ApiProperty({
+      description: 'model to use for data extraction',
+      type: 'object',
+      properties: {
+        apiKey: {
+          type: 'string',
+          description: 'api key of the model',
+          nullable: true,
+        },
+        name: {
+          type: 'string',
+          description: 'name of the model',
+          default: 'gpt-3.5-turbo',
+        },
+      },
+    })
+    @IsObject()
+    model: {
+      apiKey?: string;
+      name: string;
+    };
   
     @ApiPropertyOptional({ description: 'if a debug report of the json extraction should be generated', default: false, required: false})
     @IsBoolean()

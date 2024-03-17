@@ -15,8 +15,8 @@ import { OrganizedDataModule } from './modules/organized-data/organized-data.mod
       load: [configuration],
      }),
     ThrottlerModule.forRoot([{
-      ttl: 60,
-      limit: 10,
+      ttl: 30,
+      limit: 200,
     }]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule], // Import ConfigModule to access ConfigService

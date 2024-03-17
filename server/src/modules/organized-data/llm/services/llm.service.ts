@@ -6,41 +6,19 @@ import { ChainValues } from "langchain/dist/schema"
 import { PromptTemplate } from "langchain/prompts";
 import { LLMChain, loadQARefineChain } from "langchain/chains"
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { LLMNotAvailableError, PromptTemplateFormatError, RefinePromptInputVaribalesError, RefineReservedChainValuesError } from "../exceptions/exceptions";
+import { LLMApiKeyInvalidError, LLMApiKeyMissingError, LLMBadRequestReceivedError, LLMNotAvailableError, PromptTemplateFormatError, RefinePromptInputVaribalesError, RefineReservedChainValuesError } from "../exceptions/exceptions";
 import { Document } from "langchain/document"
+import { Model } from "../types/types";
+import { RefineCallbackHandler } from "../callback-handlers/refine-handler";
+import { DebugCallbackHandler } from "../callback-handlers/debug-handler";
 
 @Injectable()
 export class LLMService {
     constructor(
         private configService: ConfigService
     ) {}
-    private gpt3_5 = new ChatOpenAI({
-       cache: true,
-       maxConcurrency: 10,
-       maxRetries: 3,
-       modelName: 'gpt-3.5-turbo',
-       openAIApiKey: this.configService.get<string>('OPENAI_API_KEY'),
-       temperature: 0
-    })
-
-    private gpt4 = new ChatOpenAI({
-        cache: true,
-        maxConcurrency: 10,
-        maxRetries: 3,
-        modelName: 'gpt-4',
-        openAIApiKey: this.configService.get<string>('OPENAI_API_KEY'),
-        temperature: 0
-     })
-
-     private availablemodels = new Map<string, BaseLanguageModel>([
-        ['gpt-3.5-turbo', this.gpt3_5],
-        ['gpt-4', this.gpt4]
-     ])
-
-     async generateOutput(model: string, promptTemplate: PromptTemplate, chainValues: ChainValues) {
-        if (!this.availablemodels.has(model)) {
-         throw new LLMNotAvailableError(model)
-        }
+     async generateOutput(model: Model, promptTemplate: PromptTemplate, chainValues: ChainValues, debug: boolean) {
+        const llm = this.retrieveAvailableModel(model)
 
         try {
          await promptTemplate.format(chainValues)
@@ -48,11 +26,25 @@ export class LLMService {
          throw new PromptTemplateFormatError()
         }
 
-        const llmChain = new LLMChain({ llm: this.availablemodels.get(model), prompt: promptTemplate })
+        const llmChain = new LLMChain({ llm, prompt: promptTemplate })
 
-        const output = await llmChain.call(chainValues)
+        try {
+          const handler = new DebugCallbackHandler()
 
-        return output
+
+          const output = await llmChain.call(chainValues, debug ? [handler] : [])
+          return { output, debugReport: debug ? handler.debugReport : null }
+        } catch (error) {
+          if (error?.response?.status && error?.response?.status === 401) {
+            throw new LLMApiKeyInvalidError(model.name)
+          }
+
+          if (error?.response?.status && error?.response?.status === 400) {
+            throw new LLMBadRequestReceivedError(model.name)
+          }
+
+          throw error
+        }
      }
 
      async splitDocument(document: string, params: { chunkSize: number; overlap: number }) {
@@ -63,10 +55,8 @@ export class LLMService {
         return output as any
      }
 
-     async generateRefineOutput(model: string, initialPromptTemplate: PromptTemplate, refinePromptTemplate: PromptTemplate, chainValues: ChainValues & { input_documents: Document[] }) {
-        if (!this.availablemodels.has(model)) {
-         throw new LLMNotAvailableError(model)
-        }
+     async generateRefineOutput(model: Model, initialPromptTemplate: PromptTemplate, refinePromptTemplate: PromptTemplate, chainValues: ChainValues & { input_documents: Document[] }, debug: boolean) {
+        const llm = this.retrieveAvailableModel(model)
 
         if (chainValues['context' || chainValues['existing_answer']]) {
           throw new RefineReservedChainValuesError('context or existing_answer')
@@ -76,19 +66,57 @@ export class LLMService {
         this.throwErrorIfInputVariableMissing('refinePromptTemplate', 'context', refinePromptTemplate.inputVariables)
         this.throwErrorIfInputVariableMissing('refinePromptTemplate', 'existing_answer', refinePromptTemplate.inputVariables)
 
-        const refineChain = loadQARefineChain(this.availablemodels.get(model), {
+        const refineChain = loadQARefineChain(llm, {
             questionPrompt: initialPromptTemplate,
             refinePrompt: refinePromptTemplate
         })
 
-        const output = await refineChain.call(chainValues)
+        try {
+          const debugHandler = new DebugCallbackHandler()
 
-        return output
+          const handler = new RefineCallbackHandler()
+          const output = await refineChain.call(chainValues, debug ? [handler, debugHandler] : [handler])
+          return { output, llmCallCount: handler.llmCallCount , debugReport: debug ? debugHandler.debugReport : null}
+        } catch (error) {
+          if (error?.response?.status && error?.response?.status === 401) {
+            throw new LLMApiKeyInvalidError(model.name)
+          }
+
+          if (error?.response?.status && error?.response?.status === 400) {
+            throw new LLMBadRequestReceivedError(model.name)
+          }
+
+          throw error
+        }
      }
 
      private throwErrorIfInputVariableMissing(templateName: string, variableName: string, inputVariables: string[]) {
       if (!inputVariables.includes(variableName)) {
          throw new RefinePromptInputVaribalesError(templateName, variableName);
+       }
+     }
+
+     private retrieveAvailableModel(model: Model): BaseLanguageModel {
+      switch (model.name) {
+        case 'gpt-3.5-turbo':
+        case 'gpt-3.5-turbo-16k':
+        case 'gpt-4': {
+          if (!model.apiKey) {
+            throw new LLMApiKeyMissingError(model.name);
+          }
+          const llm = new ChatOpenAI({
+            cache: true,
+            maxConcurrency: 10,
+            maxRetries: 3,
+            modelName: model.name,
+            openAIApiKey: model.apiKey,
+            temperature: 0,
+          });
+          return llm;
+        }
+        default: {
+          throw new LLMNotAvailableError(model.name);
+        }
        }
      }
 }
