@@ -55,7 +55,7 @@ export class LLMService {
         return output as any
      }
 
-     async generateRefineOutput(model: Model, initialPromptTemplate: PromptTemplate, refinePromptTemplate: PromptTemplate, chainValues: ChainValues & { input_documents: Document[] }, debug: boolean) {
+     async generateRefineOutput(model: Model, initialPromptTemplate: PromptTemplate, refinePromptTemplate: PromptTemplate, chainValues: ChainValues & { input_documents: Document[] }, debug: boolean = false) {
         const llm = this.retrieveAvailableModel(model)
 
         if (chainValues['context' || chainValues['existing_answer']]) {

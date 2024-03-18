@@ -4,13 +4,17 @@ import { ConfigService } from "@nestjs/config";
 import Poppler from "node-poppler";
 import { AxiosResponse } from "axios";
 import { PdfExtensionError, PdfNotParsedError, PdfSizeError } from "../exceptions/exceptions";
+import { ISOLogger } from "src/modules/logger/services/iso-logger.service";
 
 @Injectable()
 export class PdfParserService {
     constructor(
         private configService: ConfigService,
-        private httpService: HttpService
-    ) {}
+        private httpService: HttpService,
+        private logger: ISOLogger
+    ) {
+        this.logger.setContext(PdfParserService.name)
+    }
 //--------------------------------------------------------//PARSE PDF SERVICE//----------------------------------------------------------------//
     async parsePdf(file: Buffer) {
         const poppler = new Poppler()
@@ -21,9 +25,11 @@ export class PdfParserService {
         }) as any
 
         if (output.length === 0) {
+            this.logger.warn('PDF not parsed')
             throw new PdfNotParsedError()
         }
 
+        this.logger.warn('PDF parsed succesfully')
         return this.postProcessText(output)
     }
 
@@ -32,6 +38,7 @@ export class PdfParserService {
         const extension = url.split('.').pop()
 
         if (extension !== 'pdf') {
+            this.logger.warn('PDF extension not valid')
             throw new PdfExtensionError()
         }
 
@@ -42,6 +49,7 @@ export class PdfParserService {
         })
 
         if (response.headers['content-length'] > 5 * 1024 * 1024) {
+            this.logger.warn('PDF size over 5MB')
             throw new PdfSizeError()
         }
 

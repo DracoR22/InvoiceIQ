@@ -5,9 +5,15 @@ import helmet from 'helmet';
 import { VersioningType } from '@nestjs/common/enums';
 import { ValidationPipe } from '@nestjs/common/pipes';
 import { ApiKeyAuthGuard } from './modules/auth/guards/api-key-auth.guard';
+import { ISOLogger } from './modules/logger/services/iso-logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // USE LOGGER
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true
+  });
+
+  app.useLogger(await app.resolve(ISOLogger))
 
   // Security
   app.useGlobalGuards(new ApiKeyAuthGuard())

@@ -3,17 +3,31 @@ import { PdfParserService } from "../services/pdf-parser.service"
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { HttpModule } from "@nestjs/axios"
 import { PdfExtensionError } from "../exceptions/exceptions"
+import { ISOLogger } from "src/modules/logger/services/iso-logger.service"
 
 describe('PdfParserService', () => {
     let service: PdfParserService
+    let logger: ISOLogger
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [PdfParserService, ConfigService],
+            providers: [
+                PdfParserService,
+                ConfigService, {
+                provide: ISOLogger,
+                useValue: {
+                    debug: jest.fn(),
+                    log: jest.fn(),
+                    error: jest.fn(),
+                    warn: jest.fn(),
+                    setContent: jest.fn()
+                }
+             }],
             imports: [HttpModule, ConfigModule.forRoot()]
         }).compile()
 
         service = module.get<PdfParserService>(PdfParserService)
+        logger = await module.resolve<ISOLogger>(ISOLogger)
     })
 
     it('should be defined', () => {

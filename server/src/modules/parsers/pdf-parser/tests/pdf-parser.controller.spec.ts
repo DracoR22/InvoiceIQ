@@ -4,20 +4,34 @@ import { PdfParserService } from "../services/pdf-parser.service"
 import { ConfigModule } from "@nestjs/config"
 import { HttpModule } from "@nestjs/axios"
 import { UnprocessableEntityException } from "@nestjs/common"
+import { ISOLogger } from "src/modules/logger/services/iso-logger.service"
 
 describe('PdfParserController', () => {
     let controller: PdfParserController
     let service: PdfParserService
+    let logger: ISOLogger
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [PdfParserController],
-            providers: [PdfParserService],
+            providers: [
+              PdfParserService, {
+                provide: ISOLogger,
+                useValue: {
+                    debug: jest.fn(),
+                    log: jest.fn(),
+                    error: jest.fn(),
+                    warn: jest.fn(),
+                    setContent: jest.fn()
+                }
+             }
+            ],
             imports: [ConfigModule.forRoot(), HttpModule]
         }).compile()
 
         controller = module.get<PdfParserController>(PdfParserController)
         service = module.get<PdfParserService>(PdfParserService)
+        logger = await module.resolve<ISOLogger>(ISOLogger)
     })
     
     it('should be defined', () => {
@@ -70,6 +84,7 @@ describe('PdfParserController', () => {
         await expect(controller.parsePdfFromUpload(mockFile)).rejects.toThrow(
           UnprocessableEntityException,
         );
+        expect(logger.warn).toHaveBeenCalled()
     });
 
     it('should return a PdfParserUrlResultDto from a PDF file given from a URL', async () => {

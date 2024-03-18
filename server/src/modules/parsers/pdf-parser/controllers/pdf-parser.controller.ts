@@ -5,6 +5,7 @@ import { PdfParserService } from "../services/pdf-parser.service";
 import { PdfParserUploadResultDto, PdfParserUrlResultDto } from "../dtos/pdf-parser-result.dto";
 import { PdfParserRequestDto } from "../dtos/pdf-parser-request.dto";
 import { PdfNotParsedError } from "../exceptions/exceptions";
+import { ISOLogger } from "src/modules/logger/services/iso-logger.service";
 
 const uploadSchema = {
     type: 'object',
@@ -35,8 +36,11 @@ const pdfPipe = new ParseFilePipeBuilder()
 @Controller({ path: 'parsers/pdf', version: '1' })
 export class PdfParserController {
     constructor(
-        private readonly pdfParserService: PdfParserService
-    ) {}
+        private readonly pdfParserService: PdfParserService,
+        private logger: ISOLogger
+    ) {
+      this.logger.setContext(PdfParserController.name)
+    }
 //-------------------------------------------------------//UPLOAD PDF AND PARSE IT//----------------------------------------------------------//
     @ApiOperation({ summary: 'Return text from uploaded PDF file', description: `This endpoint retrieves the content of an uploaded PDF file and returns it as a text.\n The file must be a PDF parsable text context, with a maximum size of 5MB.`})
     @ApiOkResponse({ type: PdfParserUploadResultDto, description: 'The PDF file has been successfully parsed, Its content is returned as text' })
@@ -48,12 +52,14 @@ export class PdfParserController {
     async parsePdfFromUpload(@UploadedFile(pdfPipe) file: Express.Multer.File): Promise<PdfParserUploadResultDto> {
         try {
          const text = await this.pdfParserService.parsePdf(file.buffer)
+         this.logger.log('PDF Controller successfully parsed!!');
 
          return {
             originalFileName: file.originalname,
             content: text
           }
         } catch (error) {
+          this.logger.warn('UnprocessableEntityException thrown');
           throw new UnprocessableEntityException(error.message)
         }
     }
@@ -75,9 +81,11 @@ export class PdfParserController {
           }
         } catch (error) {
           if (error instanceof PdfNotParsedError) {
+            this.logger.warn('UnprocessableEntityException thrown');
             throw new UnprocessableEntityException(error.message)
           }
 
+          this.logger.warn('BadRequestException thrown');
           throw new BadRequestException(error.message)
         }
     }

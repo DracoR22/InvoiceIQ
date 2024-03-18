@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -6,6 +6,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ParsersModule } from './modules/parsers/parsers.module';
 import configuration from './config/configuration';
 import { OrganizedDataModule } from './modules/organized-data/organized-data.module';
+import { LoggerModule } from './modules/logger/logger.module';
+import { LoggerMiddleware } from './modules/logger/middlewares/logger.middleware';
 
 @Module({
   imports: [
@@ -34,9 +36,13 @@ import { OrganizedDataModule } from './modules/organized-data/organized-data.mod
     }),
     AuthModule,
     ParsersModule,
-    OrganizedDataModule
+    OrganizedDataModule,
+    LoggerModule
   ],
-  controllers: [],
-  providers: [],
 })
-export class AppModule {}
+export class AppModule {
+  // USE LOGGER MIDDLEWARE
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL })
+  }
+}
