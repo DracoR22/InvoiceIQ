@@ -4,7 +4,7 @@ import { PdfParserService } from "../services/pdf-parser.service"
 import { ConfigModule } from "@nestjs/config"
 import { HttpModule } from "@nestjs/axios"
 import { UnprocessableEntityException } from "@nestjs/common"
-import { ISOLogger } from "src/modules/logger/services/iso-logger.service"
+import { ISOLogger } from "../../../../modules/logger/services/iso-logger.service"
 
 describe('PdfParserController', () => {
     let controller: PdfParserController

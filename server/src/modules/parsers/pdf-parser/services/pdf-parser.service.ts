@@ -2,9 +2,8 @@ import { HttpService } from "@nestjs/axios";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Poppler from "node-poppler";
-import { AxiosResponse } from "axios";
-import { PdfExtensionError, PdfNotParsedError, PdfSizeError } from "../exceptions/exceptions";
-import { ISOLogger } from "src/modules/logger/services/iso-logger.service";
+import { PdfNotParsedError, PdfSizeError } from "../exceptions/exceptions";
+import { ISOLogger } from "../../../../modules/logger/services/iso-logger.service";
 
 @Injectable()
 export class PdfParserService {
@@ -35,13 +34,6 @@ export class PdfParserService {
 
 //--------------------------------------------------------//POST PDF FROM URL//----------------------------------------------------------------//
     async loadPdfFromUrl(url: string) {
-        const extension = url.split('.').pop()
-
-        if (extension !== 'pdf') {
-            this.logger.warn('PDF extension not valid')
-            throw new PdfExtensionError()
-        }
-
         const response = await this.httpService.axiosRef({
             url,
             method: 'GET',

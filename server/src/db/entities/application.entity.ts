@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { ApiKey } from "./api-key.entity";
 
 @Entity()
@@ -11,5 +11,11 @@ export class Application {
 
     @OneToMany(() => ApiKey, (apiKey) => apiKey.application)
     apiKeys: Promise<ApiKey[]>
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
 }
 

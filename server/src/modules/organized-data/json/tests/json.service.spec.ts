@@ -111,6 +111,7 @@ describe('JsonService', () => {
             title: 'This is a title',
             description: 'This is a text',
           };
+          
           const schema = '{"title": "string", "description": "string"}';
           
           const model = {
@@ -157,5 +158,71 @@ describe('JsonService', () => {
             ),
           ).rejects.toThrow(InvalidJsonOutputError);
         });
+      });
+
+      describe('classifyText()', () => {
+        it('should return a classification object', async () => {
+          const text = 'This is a text representing a positive sentiment';
+          const categories = ['positive', 'negative'];
+
+          const model = {
+            apiKey: configService.get('OPENAI_API_KEY'),
+            name: 'gpt-3.5-turbo',
+          };
+
+          const { json: classification } = await service.classifyText(
+            model,
+            text,
+            categories,
+          );
+    
+          expect(classification).toBeDefined();
+          expect(classification).toHaveProperty('classification');
+          expect(classification).toHaveProperty('confidence');
+          expect(classification.classification).toBe('positive');
+        }, 30000);
+
+        it('should return a classification object with other as a value', async () => {
+          const text = 'This is a text expressing neither a positive sentiment nor a negative one';
+          const categories = ['positive', 'negative'];
+
+          const model = {
+            apiKey: configService.get('OPENAI_API_KEY'),
+            name: 'gpt-3.5-turbo',
+          };
+
+          const { json: classification } = await service.classifyText(
+            model,
+            text,
+            categories,
+          );
+    
+          expect(classification).toBeDefined();
+          expect(classification).toHaveProperty('classification');
+          expect(classification).toHaveProperty('confidence');
+          expect(classification.classification).toBe('other');
+        }, 30000);
+
+        it('should throw if the output is not a valid classification object', async () => {
+          const text = 'This is a text representing a positive sentiment';
+          const categories = ['positive', 'negative'];
+
+          const model = {
+            apiKey: configService.get('OPENAI_API_KEY'),
+            name: 'gpt-3.5-turbo',
+          };
+
+          jest.spyOn(llmService, 'generateOutput').mockResolvedValue({
+            output: {
+              text: '{}{classification}',
+            },
+            debugReport: null,
+          });
+
+          await expect(
+            service.classifyText(model, text, categories),
+          ).rejects.toThrow(InvalidJsonOutputError);
+          // expect(logger.warn).toHaveBeenCalled();
+        }, 30000);
       });
 })

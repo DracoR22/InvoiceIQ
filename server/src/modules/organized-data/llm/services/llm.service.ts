@@ -31,7 +31,6 @@ export class LLMService {
         try {
           const handler = new DebugCallbackHandler()
 
-
           const output = await llmChain.call(chainValues, debug ? [handler] : [])
           return { output, debugReport: debug ? handler.debugReport : null }
         } catch (error) {

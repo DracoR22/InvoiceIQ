@@ -5,7 +5,7 @@ import { PdfParserService } from "../services/pdf-parser.service";
 import { PdfParserUploadResultDto, PdfParserUrlResultDto } from "../dtos/pdf-parser-result.dto";
 import { PdfParserRequestDto } from "../dtos/pdf-parser-request.dto";
 import { PdfNotParsedError } from "../exceptions/exceptions";
-import { ISOLogger } from "src/modules/logger/services/iso-logger.service";
+import { ISOLogger } from "../../../../modules/logger/services/iso-logger.service";
 
 const uploadSchema = {
     type: 'object',
@@ -39,6 +39,7 @@ export class PdfParserController {
         private readonly pdfParserService: PdfParserService,
         private logger: ISOLogger
     ) {
+      // THIS IS FOR USING LOGGER
       this.logger.setContext(PdfParserController.name)
     }
 //-------------------------------------------------------//UPLOAD PDF AND PARSE IT//----------------------------------------------------------//

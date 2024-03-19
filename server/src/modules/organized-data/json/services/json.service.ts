@@ -1,10 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { LLMService } from "../../llm/services/llm.service";
-import { jsonAnalysis, jsonOneShotExtraction, jsonZeroShotSchemaExtraction, jsonZeroShotSchemaExtractionRefine } from "../prompts/prompts";
+import { jsonAnalysis, jsonClassification, jsonOneShotExtraction, jsonZeroShotSchemaExtraction, jsonZeroShotSchemaExtractionRefine } from "../prompts/prompts";
 import { InvalidJsonOutputError } from "../exceptions/exceptions";
 import { RefineParams } from "../types/types";
 import { Analysis } from "../dtos/json-analyze-result.dto";
 import { Model } from "../../llm/types/types";
+import { Classification } from "../dtos/json-classification-result.dto";
+import { PromptTemplate } from "langchain/prompts";
 
 @Injectable()
 export class JsonService {
@@ -49,6 +51,7 @@ export class JsonService {
         }
     }
 
+//-------------------------------------------------//TURN TEXT INTO JSON EXAMPLE//---------------------------------------------------------//
     async extractWithExample(text: string, model: Model, example: { input: string; output: string }, debug = false) {
         const { output, debugReport } = await this.llmService.generateOutput(model, jsonOneShotExtraction, {
             context: text,
@@ -64,6 +67,7 @@ export class JsonService {
         }
     }
 
+//-----------------------------------------------//ANALIZE JSON AND RETURN ITS CORRECTIONS//----------------------------------------------//
     async analizeJsonOutput(model: Model, jsonOutput: string, originalText: string, schema: string, debug = false) {
         const outputFormat: Analysis = {
             corrections: [
@@ -101,4 +105,58 @@ export class JsonService {
             throw new InvalidJsonOutputError()
         }
     }
+
+//---------------------------------------------------//CLASSIFY TEXT//----------------------------------------------------------------//
+    async classifyText(model: Model, text: string, categories: string[], debug = false) {
+        const outputFormat = {
+          classification: 'classification of the text',
+          confidence: 'number representing your confidence of the classification in percentage. display only the number, not the percentage sign',
+        };
+    
+        const { output, debugReport } = await this.llmService.generateOutput(
+          model,
+          jsonClassification,
+          {
+            categories,
+            text,
+            outputFormat: JSON.stringify(outputFormat),
+          },
+          debug,
+        );
+    
+        try {
+          const json: Classification = JSON.parse(output.text);
+          if (json.classification && json.confidence) {
+            //this.logger.debug('classifyText: json parsed successfully');
+            return { json, debugReport };
+          } else {
+            //this.logger.warn('classifyText: json parsing failed');
+            throw new InvalidJsonOutputError();
+          }
+        } catch (e) {
+          //this.logger.warn('classifyText: json parsing failed');
+          throw new InvalidJsonOutputError();
+        }
+      }
+    
+      async handleGenericPrompt(model: Model, prompt: string, debug = false) {
+        const { output, debugReport } = await this.llmService.generateOutput(
+          model,
+          new PromptTemplate({
+            inputVariables: ['prompt'],
+            template: '{prompt}',
+          }),
+          {
+            prompt,
+          },
+          debug,
+        );
+    
+        const json = {
+          output: output.text,
+        };
+        
+        //this.logger.debug('handleGenericPrompt: json generated successfully');
+        return { json, debugReport };
+      }
 }
