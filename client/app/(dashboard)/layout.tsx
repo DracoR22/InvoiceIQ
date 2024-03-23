@@ -1,7 +1,9 @@
 import { BottomSection } from "@/components/bottom-section";
 import NavSection, { NavItem, NavSectionItems } from "@/components/nav-section";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
+import { authOptions } from "../api/auth/[...nextauth]/route";
 
 interface DashboardLayoutProps {
     children: React.ReactNode
@@ -64,7 +66,10 @@ const pipelines: NavSectionItems = {
     },
   ];
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default async function DashboardLayout({ children }: DashboardLayoutProps) {
+
+    const session = await getServerSession(authOptions)
+
     return (
     <div className="min-h-screen flex">
        {/* SIDEBAR */}
@@ -79,7 +84,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <NavSection className="mt-8" section={pipelines} />
             <NavSection className="mt-10" section={organizedData} />
             <div className="flex flex-1 flex-col gap-y-7">
-              <BottomSection className="mt-auto" username={"Default"} items={bottomItems}/>
+              <BottomSection className="mt-auto" username={session?.user.username ?? "Default"} items={bottomItems}/>
             </div>
           </nav>
         </div>

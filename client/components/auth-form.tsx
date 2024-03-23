@@ -30,15 +30,22 @@ export function AuthForm({ className, ...props }: AuthFormProps) {
    async function onSubmit(data: FormData) {
      setIsLoading(true)
 
-     const signInResult = await signIn('credentials', {
-      username: data.username.toLowerCase(),
-      password: data.password,
-      redirect: false
-     })
+     const [settledResult] = await Promise.allSettled([
+      signIn('credentials', {
+         username: data.username.toLowerCase(),
+         password: data.password,
+         redirect: false
+        }),
+        new Promise((resolve) => setTimeout(resolve, 700))
+      ])
+
+     const signInResult = settledResult.status === 'fulfilled' ? settledResult.value : null
 
      if (!signInResult?.ok) {
       return toast.error('Something went wrong!')
      }
+
+     setIsLoading(false)
 
      router.refresh()
      router.push('/dashboard')
