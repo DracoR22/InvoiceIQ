@@ -30,7 +30,7 @@ export function BottomSection({ className, username, items }: { className?: stri
           })}
         </ul>
       </div>
-      <div className={cn(className, "flex items-center border rounded-md border-slate-200 py-3 px-2.5 -ml-2")}>
+      <div className={cn(className, "flex items-center border rounded-md border-slate-200 py-3 px-2.5 -ml-2 mt-4")}>
         <div className="rounded-full bg-slate-900 h-10 w-10 flex flex-none items-center justify-center">
           <span className="text-slate-100 font-bold">
             {`${username.slice(0, 1).toUpperCase()}${username.slice(1, 2)}`}

@@ -45,10 +45,10 @@ const NavSection = ({ className, section }: { className?: string; section: NavSe
                       {item.label}
                     </span>
                   </Link>
-               );
-           })}
-        </ul>
-            </div>
+                 );
+              })}
+            </ul>
+          </div>
         </div>
     )
 }

@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r-2 border-slate-200 bg-white pl-8 pr-6 pb-4">
           {/* LOGO */}
           <Link href="/dashboard">
-            <Image className="flex mt-8 shrink-0" priority src="/logo.png" width={102} height={38} alt=""/>
+            <Image className="flex mt-8 shrink-0" priority src="/logo.png" width={50} height={50} alt=""/>
           </Link>
           {/* NAVIGATION */}
           <nav className="flex flex-1 flex-col">

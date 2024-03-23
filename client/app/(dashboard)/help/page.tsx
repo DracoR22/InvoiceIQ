@@ -1,7 +1,12 @@
+import TopMainContent from "@/components/top-main-content";
+
 export default function HelpPage() {
     return (
-        <div>
-            <h1>Help page</h1>
-        </div>
+        <>
+         <TopMainContent title="Help" displayUploadButton/>
+         <div className="m-4">
+          <h1>Help page</h1>
+         </div>
+        </>
     )
 }

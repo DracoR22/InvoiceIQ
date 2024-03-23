@@ -7,17 +7,17 @@ export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const { email, password } = credentials ?? {}
-        if (!email || !password) {
+        const { username, password } = credentials ?? {}
+        if (!username || !password) {
           throw new Error("Missing username or password");
         }
         const user = await prisma.user.findUnique({
           where: {
-            email,
+            username,
           },
         });
         // if user doesn't exist or password doesn't match

@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input"
 import { buttonVariants } from "@/components/ui/button"
 import { Label } from "./ui/label"
 import { Icons } from "./icons"
+import { signIn } from "next-auth/react"
+import toast from "react-hot-toast"
+import { useRouter } from "next/navigation"
 
 interface AuthFormProps extends React.HTMLAttributes<HTMLDivElement>{}
 
@@ -18,12 +21,27 @@ type FormData = z.infer<typeof authSchema>
 export function AuthForm({ className, ...props }: AuthFormProps) {
    const [isLoading, setIsLoading] = useState<boolean>(false)
 
+   const router = useRouter()
+
    const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
       resolver: zodResolver(authSchema)
    })
 
    async function onSubmit(data: FormData) {
+     setIsLoading(true)
 
+     const signInResult = await signIn('credentials', {
+      username: data.username.toLowerCase(),
+      password: data.password,
+      redirect: false
+     })
+
+     if (!signInResult?.ok) {
+      return toast.error('Something went wrong!')
+     }
+
+     router.refresh()
+     router.push('/dashboard')
    }
 
    return (

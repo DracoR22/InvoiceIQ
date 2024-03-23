@@ -33,7 +33,6 @@ export default async function RootLayout({
     <html lang="en">
       <body className={inter.variable}>
         <Toaster />
-        
         {children}
       </body>
     </html>
