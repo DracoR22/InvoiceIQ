@@ -10,13 +10,6 @@ async function main() {
     create: {
       username: "r",
       password: await hash("supersecret", 10),
-      preferences: {
-        create: {
-          classificationModel: "gpt-3.5-turbo",
-          extractionModel: "gpt-3.5-turbo",
-          analysisModel: "gpt-3.5-turbo",
-        },
-      },
     },
   });
 }

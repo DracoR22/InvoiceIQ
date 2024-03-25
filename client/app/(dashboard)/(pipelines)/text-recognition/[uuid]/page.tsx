@@ -1,7 +1,11 @@
+import TextRecognitionPipeline from "@/components/pipelines/text-recognition-pipeline";
+import TopMainContent from "@/components/top-main-content";
+
 export default function TextRecognitionUUIDPage() {
     return (
-        <div>
-            <h1>Text recognition UUID page</h1>
-        </div>
+        <>
+          <TopMainContent title="Text Recognition"/>
+          <TextRecognitionPipeline/>
+        </>
     )
 }

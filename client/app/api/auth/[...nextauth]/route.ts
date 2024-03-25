@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       throw new Error("Invalid token")
-    }
+    },
 
     async session({ session, token }) {
       if (session.user && token.sub && token.name) {
