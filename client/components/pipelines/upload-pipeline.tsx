@@ -23,7 +23,7 @@ const UploadPipeline = () => {
   const { status } = useStepStore();
 
   return (
-    <div className="flex flex-col mx-4 flex-grow -mt-24 2xl:-mt-64">
+    <div className="flex flex-col mx-4 flex-grow ">
       <div className="flex flex-col flex-1 items-center justify-center">
         {status === "active" && (
           <Dropzone updateUploadInfos={setUploadInfos} className="mt-4 mb-8" />
