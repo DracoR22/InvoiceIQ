@@ -1,11 +1,22 @@
 import VerificationPipeline from "@/components/pipelines/verification-pipeline";
 import TopMainContent from "@/components/top-main-content";
+import { getExtractionData, getS3ObjectUrl } from "@/lib/requests";
+import { Status } from "@prisma/client";
 
-export default function VerificationUUIDPage() {
+export default async function VerificationUUIDPage({ params }: { params: { uuid: string } }) {
+    const data = await getExtractionData(params.uuid, Status.TO_VERIFY);
+    const { url } = await getS3ObjectUrl(params.uuid);
+  
     return (
-        <>
-         <TopMainContent title="Verification"/>
-         <VerificationPipeline/>
-        </>
-    )
+      <div className="flex flex-col h-full">
+        <TopMainContent title="Verification" step={4} />
+        <VerificationPipeline
+          uuid={params.uuid}
+          url={url}
+          category={data.category as string}
+          text={data.text as string}
+          json={data.json}
+        />
+      </div>
+    );
 }
